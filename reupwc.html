@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>PWC EXPRESS – Code Secret</title>
+  <style>
+    :root{
+      --night:#0b0a0f;      /* deep night */
+      --dune:#2a1208;       /* desert shadow */
+      --cream:#f7efe5;      /* text */
+      --ok:#16a34a;         /* green */
+      --err:#ef4444;        /* red */
+    }
+
+    html,body{ height:100%; width:100%; }
+    body{
+      margin:0; color:var(--cream); overflow:hidden; display:grid; place-items:center;
+      height:100svh; min-height:100dvh; /* robust fullscreen */
+      background:
+        radial-gradient(1600px 900px at 80% -10%, rgba(255,179,71,.25), transparent 60%),
+        radial-gradient(1200px 800px at -10% 110%, rgba(192,90,21,.25), transparent 55%),
+        linear-gradient(180deg, var(--night), var(--dune));
+      background-blend-mode: screen, screen, normal;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    /* Strong, animated Marrakech vibe */
+    body::before, body::after{ content:""; position:fixed; inset:-10% -10%; pointer-events:none; z-index:-3; }
+    body::before{ /* zellige shimmer */
+      background:
+        repeating-conic-gradient(from 45deg, rgba(255,255,255,.14) 0 12deg, rgba(255,255,255,0) 12deg 24deg) 0 0/120px 120px,
+        radial-gradient(circle at 50% 50%, rgba(255,179,71,.16), transparent 60%);
+      animation: swirl 55s linear infinite; mix-blend-mode: soft-light; opacity:.9;
+    }
+    body::after{ /* drifting golden haze */
+      background:
+        radial-gradient(1200px 800px at 10% 20%, rgba(255,179,71,.18), transparent 60%),
+        radial-gradient(1000px 700px at 90% 80%, rgba(255,145,0,.14), transparent 55%);
+      animation: drift 22s ease-in-out infinite alternate; opacity:.8; filter: blur(1px);
+    }
+    @keyframes swirl{ to{ transform: rotate(360deg) scale(1.04); } }
+    @keyframes drift{ from{ transform:translateY(-1%) translateX(-1%);} to{ transform:translateY(2%) translateX(2%);} }
+
+    .stage{ width:100vw; height:100%; display:grid; place-items:center; padding:0; margin:0; box-sizing:border-box; position:relative; }
+
+    /* DECOR LAYERS */
+    .decor{ position:absolute; inset:0; pointer-events:none; z-index:-2; }
+    .silhouette{ position:absolute; bottom:0; left:0; right:0; height:60vh; opacity:1; filter: contrast(1.15) saturate(1.05); animation: panX 30s linear infinite alternate; }
+    @keyframes panX{ from{ transform: translateX(-1%);} to{ transform: translateX(1%);} }
+    .dunes{ position:absolute; bottom:0; left:-5vw; right:-5vw; height:40vh; background:
+        radial-gradient(80% 140% at 20% 0%, rgba(255,179,71,.75), transparent 60%),
+        radial-gradient(90% 200% at 80% 10%, rgba(192,90,21,.70), transparent 65%);
+      clip-path: polygon(0% 60%, 15% 55%, 28% 70%, 42% 62%, 60% 75%, 78% 66%, 90% 72%, 100% 68%, 100% 100%, 0% 100%);
+      opacity:1; }
+    .stars{ position:absolute; inset:0; z-index:-4; pointer-events:none; background:
+        radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.95), transparent 2px),
+        radial-gradient(1px 1px at 70% 20%, rgba(255,255,255,.85), transparent 2px),
+        radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,.95), transparent 2px),
+        radial-gradient(1px 1px at 85% 60%, rgba(255,255,255,.9), transparent 2px),
+        radial-gradient(1px 1px at 10% 70%, rgba(255,255,255,.8), transparent 2px),
+        radial-gradient(1px 1px at 55% 50%, rgba(255,255,255,.85), transparent 2px);
+      animation: twinkle 6s ease-in-out infinite alternate; }
+    @keyframes twinkle{ from{ opacity:.5; transform: translateY(-1%);} to{ opacity:1; transform: translateY(1%);} }
+
+    /* UI CARD (transparent to show decor clearly) */
+    .card{
+      width:100vw; height:100%; box-sizing:border-box; position:relative; z-index:1;
+      display:grid; grid-template-rows:auto auto auto 1fr auto auto; justify-items:center; gap: clamp(8px, 2.2vmin, 18px);
+      padding: clamp(8px, 2.5vmin, 24px);
+      border-radius:0; background: transparent; border:none; backdrop-filter:none;
+    }
+
+    h1{ margin:0; text-transform:uppercase; font-weight:900; letter-spacing:.08em; text-align:center; font-size:clamp(28px, 8vw, 80px); text-shadow:0 2px 14px rgba(0,0,0,.65);} 
+    .subtitle{ font-size:clamp(14px, 3.5vw, 22px); opacity:.98; text-shadow:0 2px 10px rgba(0,0,0,.55); }
+
+    .display{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:clamp(20px, 5vw, 34px); letter-spacing:.25em; padding:12px 18px; border-radius:16px;
+      background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.16); min-width:min(70vw,340px); text-align:center; }
+
+    /* DIAL */
+    .dial-wrap{ display:grid; place-items:center; width:100%; height:100%; }
+    .dial{ position:relative; width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
+    .digit{
+      position:absolute; width:clamp(52px, 12vw, 96px); height:clamp(52px, 12vw, 96px);
+      border-radius:50%; display:grid; place-items:center; cursor:pointer; user-select:none;
+      color:#fff; font-weight:900; font-size:clamp(22px, 5.5vw, 36px);
+      background:linear-gradient(180deg, rgba(255,255,255,.25), rgba(255,255,255,.08));
+      border:1px solid rgba(255,255,255,.35); box-shadow: 0 8px 24px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.3);
+      transition: transform .08s ease, filter .2s ease;
+    }
+    .digit:hover{ filter:brightness(1.1); }
+    .digit:active{ transform:translateY(2px) scale(.98); }
+
+    .controls{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+    .btn{ font-size:clamp(13px, 3.5vw, 16px); padding:10px 14px; border-radius:12px; color:#fff; cursor:pointer;
+          background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.22); box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+
+    .status{ min-height:1.6em; font-weight:900; letter-spacing:.04em; font-size:clamp(16px, 4vw, 28px); text-align:center; text-shadow:0 2px 12px rgba(0,0,0,.6); }
+    .ok{ color:var(--ok); }
+    .err{ color:var(--err); }
+
+    /* Center status inside the dial */
+    .dial-center{ position:absolute; inset:0; display:grid; place-items:center; pointer-events:none;
+      font-weight:900; letter-spacing:.04em; text-align:center; text-shadow:0 2px 12px rgba(0,0,0,.6);
+      font-size:clamp(24px, 7vw, 42px); }
+    .dial-center.ok{ color:var(--ok); }
+    .dial-center.err{ color:var(--err); }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="decor" aria-hidden="true">
+      <!-- Enhanced Marrakech skyline with domes, minarets, caravan -->
+      <svg class="silhouette" viewBox="0 0 1200 500" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#ff8c1a" stop-opacity="0.75"/>
+            <stop offset="100%" stop-color="#6b2d12" stop-opacity="0.95"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#g1)" d="M0 380 C 80 360, 120 340, 180 360 L 220 370 L 245 230 L 265 370 L 330 365 C 360 320, 380 320, 420 365 L 480 360 L 505 240 L 525 360 L 600 370 L 650 310 L 700 370 L 780 360 L 820 235 L 845 370 L 900 365 C 930 340, 970 340, 1020 365 L 1100 360 L 1200 375 L 1200 500 L 0 500 Z"/>
+        <g fill="#f08a2d" opacity=".95">
+          <path d="M180 370 v-90 a36 36 0 0 1 72 0 v90 z"/>
+          <rect x="270" y="240" width="24" height="130"/>
+          <polygon points="282,210 258,240 306,240"/>
+          <circle cx="282" cy="204" r="7" fill="#ffd18a"/>
+          <path d="M700 370 v-110 a44 44 0 0 1 88 0 v110 z"/>
+          <rect x="830" y="245" width="26" height="128"/>
+          <polygon points="843,215 820,245 866,245"/>
+        </g>
+        <g fill="#b85e1f" opacity=".95">
+          <path d="M520 380 c20 -10 28 -20 42 -20 c10 0 18 10 28 10 c10 0 18 -10 28 -10 c15 0 24 12 40 20"/>
+          <circle cx="528" cy="386" r="5"/>
+          <circle cx="586" cy="386" r="5"/>
+          <circle cx="644" cy="386" r="5"/>
+        </g>
+      </svg>
+      <div class="dunes"></div>
+      <div class="stars" aria-hidden="true"></div>
+    </div>
+
+    <section class="card" role="application" aria-label="PWC Express – saisie de code">
+      <h1>PWC EXPRESS</h1>
+      <div class="subtitle">Insérer le code secret</div>
+      <div class="display" id="display" aria-live="polite">• • •</div>
+
+      <div class="dial-wrap">
+        <div class="dial" id="dial" aria-label="Cadran 0 à 9">
+          <div class="dial-center" id="centerStatus"></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="clear">Effacer</button>
+        <button class="btn" id="retry" hidden>Réessayer</button>
+      </div>
+
+      <div class="status" id="status" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <script>
+(()=>{
+  'use strict';
+  const CORRECT = "980";
+  let input = "";
+  let locked = false;
+
+  const $ = (s)=>document.querySelector(s);
+  const disp = $('#display');
+  const statusEl = $('#status');
+  const dial = $('#dial');
+  const retryBtn = $('#retry');
+  const clearBtn = $('#clear');
+  const card = $('.card');
+
+  // Ensure digits exist (0→9)
+  function ensureDial(){
+    if(!dial) return;
+    if(dial.querySelectorAll('.digit').length === 0){
+      const order = ['0','1','2','3','4','5','6','7','8','9'];
+      const frag = document.createDocumentFragment();
+      for(const d of order){
+        const b = document.createElement('button');
+        b.className = 'digit'; b.type = 'button'; b.textContent = d; b.setAttribute('aria-label', `Chiffre ${d}`);
+        frag.appendChild(b);
+      }
+      dial.appendChild(frag);
+    }
+  }
+
+  function layout(){
+    ensureDial();
+    if(!card || !dial) return;
+    const rect = card.getBoundingClientRect();
+    const topH = ['h1','.subtitle','#display'].map(s=> (card.querySelector(s)?.getBoundingClientRect().height||0)).reduce((a,b)=>a+b,0);
+    const bottomH = ['.controls','#status'].map(s=> (card.querySelector(s)?.getBoundingClientRect().height||0)).reduce((a,b)=>a+b,0);
+    const styles = getComputedStyle(card);
+    const gap = parseFloat(styles.gap) || 12;
+    let freeH = Math.max(160, rect.height - topH - bottomH - 5*gap);
+    const freeW = Math.max(160, card.clientWidth - parseFloat(styles.paddingLeft||0) - parseFloat(styles.paddingRight||0));
+    let side = Math.min(freeH, freeW);
+    if(!isFinite(side) || side <= 0) side = Math.min(window.innerWidth, window.innerHeight) * 0.7; // fallback
+    dial.style.width = side + 'px';
+    dial.style.height = side + 'px';
+    positionDigits();
+  }
+
+  function positionDigits(){
+    const rect = dial.getBoundingClientRect();
+    const cx = rect.width/2, cy = rect.height/2;
+    const buttons = [...dial.querySelectorAll('.digit')];
+    const btnSize = Math.max(48, Math.min(96, rect.width*0.17));
+    for(const b of buttons){ b.style.width = b.style.height = btnSize + 'px'; }
+    const r = Math.max(0, Math.min(cx, cy) - btnSize*0.75);
+    const start = -Math.PI/2; // top
+    buttons.forEach((b,i)=>{
+      const ang = start + i * (2*Math.PI/buttons.length);
+      const x = cx + r * Math.cos(ang) - btnSize/2;
+      const y = cy + r * Math.sin(ang) - btnSize/2;
+      b.style.left = x + 'px';
+      b.style.top  = y + 'px';
+    });
+  }
+
+  function isCodeCorrect(code){ return code === CORRECT; }
+  function render(){ if(disp) disp.textContent = input.padEnd(3,'•').split('').join(' '); }
+  function setStatus(msg, ok){
+    if(statusEl){ statusEl.textContent = msg || ''; statusEl.className = 'status ' + (msg ? (ok ? 'ok' : 'err') : ''); }
+    const center = document.getElementById('centerStatus');
+    if(center){ center.textContent = msg || ''; center.className = 'dial-center ' + (msg ? (ok ? 'ok' : 'err') : ''); }
+  }
+  function reset(){ input = ""; locked = false; render(); setStatus(""); if(retryBtn) retryBtn.hidden = true; }
+
+  function check(){
+    // EXACT RULE: 980 => CORRECT (green, bold, centered); otherwise ERREUR (red, bold, centered) + show retry button
+    if(input.length < 3) return;
+    if(isCodeCorrect(input)){
+      locked = true; setStatus('CORRECT', true); if(retryBtn) retryBtn.hidden = true;
+    } else {
+      setStatus('ERREUR', false); if(retryBtn) retryBtn.hidden = false;
+    }
+  }
+
+  // Events
+  dial?.addEventListener('click', (e)=>{
+    const b = e.target.closest('.digit'); if(!b || locked) return;
+    if(input.length < 3){ input += b.textContent.trim(); render(); if(input.length===3) check(); }
+  });
+  clearBtn?.addEventListener('click', reset);
+  retryBtn?.addEventListener('click', reset);
+
+  window.addEventListener('resize', ()=> requestAnimationFrame(layout));
+  window.addEventListener('orientationchange', ()=> setTimeout(layout, 60));
+  window.addEventListener('pageshow', layout);
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) layout(); });
+
+  // Init
+  ensureDial(); render(); requestAnimationFrame(layout);
+
+  // Tests (console)
+  (function(){
+    const cases = [
+      ['980', true],
+      ['000', false],
+      ['981', false],
+      ['98', false],
+      ['', false],
+      ['9800', false],
+      [' 980', false],
+      ['098', false],
+      ['98 ', false]
+    ];
+    cases.forEach(([c,exp])=> console.assert(isCodeCorrect(c)===exp, `isCodeCorrect('${c}')`));
+    console.assert(document.querySelectorAll('.digit').length === 10, 'Dial should have 10 digits');
+    console.assert(parseFloat(getComputedStyle(dial).width) > 0, 'Dial has width');
+  })();
+})();
+  </script>
+</body>
+</html>
